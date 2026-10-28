@@ -1,0 +1,129 @@
+
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>La mia dashboard</title>
+<style>
+body {
+  margin: 0;
+  padding: 20px;
+  background: white;
+  color: black;
+  font-family: Arial, sans-serif;
+  text-align: center;
+}
+#clock {
+  font-size: 64px;
+  font-weight: bold;
+  margin-top: 20px;
+}
+#date {
+  font-size: 20px;
+  margin: 12px 0 28px;
+}
+hr {
+  border: 0;
+  border-top: 2px solid black;
+  margin: 20px 0;
+}
+h2 {
+  font-size: 20px;
+  letter-spacing: 2px;
+}
+#weather {
+  font-size: 24px;
+  line-height: 1.6;
+}
+.small {
+  font-size: 14px;
+  margin-top: 15px;
+}
+</style>
+</head>
+<body>
+<div id="clock">--:--</div>
+<div id="date">Caricamento...</div>
+
+<hr>
+
+<h2>SANT'ANTONIO</h2>
+<div id="weather">Caricamento meteo...</div>
+<div class="small">Magliano Alfieri · Piemonte</div>
+
+<hr>
+
+<div class="small">La tua dashboard quotidiana</div>
+
+<script>
+function updateClock() {
+  var now = new Date();
+  document.getElementById("clock").innerHTML =
+    ("0" + now.getHours()).slice(-2) + ":" +
+    ("0" + now.getMinutes()).slice(-2);
+
+  var days = [
+    "domenica", "lunedì", "martedì", "mercoledì",
+    "giovedì", "venerdì", "sabato"
+  ];
+  var months = [
+    "gennaio", "febbraio", "marzo", "aprile",
+    "maggio", "giugno", "luglio", "agosto",
+    "settembre", "ottobre", "novembre", "dicembre"
+  ];
+  document.getElementById("date").innerHTML =
+    days[now.getDay()] + " " + now.getDate() +
+    " " + months[now.getMonth()] + " " + now.getFullYear();
+}
+updateClock();
+setInterval(updateClock, 30000);
+
+function loadWeather() {
+  var url = "https://api.open-meteo.com/v1/forecast" +
+    "?latitude=44.77&longitude=8.08" +
+    "&current=temperature_2m,weather_code" +
+    "&timezone=Europe%2FRome";
+
+  var xhr = new XMLHttpRequest();
+  xhr.open("GET", url, true);
+  xhr.onreadystatechange = function() {
+    if (xhr.readyState === 4) {
+      if (xhr.status === 200) {
+        try {
+          var data = JSON.parse(xhr.responseText);
+          var c = data.current;
+          var code = c.weather_code;
+          var desc = "Variabile";
+
+          if (code === 0) desc = "Sereno";
+          else if (code <= 3) desc = "Nuvoloso";
+          else if (code === 45 || code === 48) desc = "Nebbia";
+          else if (code >= 51 && code <= 67) desc = "Pioggia";
+          else if (code >= 71 && code <= 77) desc = "Neve";
+          else if (code >= 80 && code <= 82) desc = "Rovesci";
+          else if (code >= 95) desc = "Temporale";
+
+          document.getElementById("weather").innerHTML =
+            Math.round(c.temperature_2m) + " &deg;C<br>" + desc;
+        } catch(e) {
+          document.getElementById("weather").innerHTML =
+            "Meteo non disponibile";
+        }
+      } else {
+        document.getElementById("weather").innerHTML =
+          "Meteo non disponibile";
+      }
+    }
+  };
+  xhr.onerror = function() {
+    document.getElementById("weather").innerHTML =
+      "Meteo non disponibile";
+  };
+  xhr.send();
+}
+loadWeather();
+setInterval(loadWeather, 1800000);
+</script>
+</body>
+</html>
